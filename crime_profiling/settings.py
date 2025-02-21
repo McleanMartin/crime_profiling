@@ -79,11 +79,11 @@ WSGI_APPLICATION = 'crime_profiling.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'your_db_name',
-        'USER': 'your_db_user',
-        'PASSWORD': 'your_db_password',
+        'NAME': 'Profiling',
+        'USER': 'postgres',
+        'PASSWORD': 'pa22w0rd',
         'HOST': 'localhost',
-        'PORT': '',
+        'PORT': '5432',
     }
 }
 
