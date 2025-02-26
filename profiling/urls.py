@@ -13,4 +13,5 @@ router.register(r'judicial_cases', JudicialCaseViewSet)
 urlpatterns = [
     path('api/', include(router.urls)),
     path('',views.index_view,name="index"),
+    path('dashboard/',views.profiling_view,name="profiling_view"),
 ]

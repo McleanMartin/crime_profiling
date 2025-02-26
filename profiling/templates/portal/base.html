@@ -1,0 +1,20 @@
+{% extends "_layout.html" %}
+{% block profiling %}
+<div class="nav-scroller bg-dark box-shadow dash ">
+    <nav class="nav nav-underline">
+      <a class="nav-link text-light" href="#">Dashboard</a>
+      <a class="nav-link text-light" href="#">
+        Investigations
+        <span class="badge badge-pill bg-light text-dark align-text-bottom">27</span>
+      </a>
+      <a class="nav-link text-light" href="#">Accounts</a>
+      <a class="nav-link text-light" href="#">Suggestions</a>
+    </nav>
+  </div>
+  {% block content %}{% endblock content %}
+  <style>
+    .dash.nav.a{
+        text-color:white;
+    }
+  </style>
+{% endblock profiling %}
