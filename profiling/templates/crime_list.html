@@ -1,0 +1,9 @@
+{% extends "_layout.html" %}
+{% block title %}Cases{% endblock title %}
+{% block content %}
+<div class="container-fluid bg-dark text-light min-vh-100 p-4">
+    <div id="crime-list">
+        {% include 'partials/crime_table.html' %}
+    </div>
+</div>
+{% endblock %}

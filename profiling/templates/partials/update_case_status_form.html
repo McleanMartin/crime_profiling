@@ -1,0 +1,8 @@
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+<form method="post" hx-post="{% url 'update_case_status' case.id %}" hx-target="#case-status">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button type="submit">Update Status</button>
+</form>

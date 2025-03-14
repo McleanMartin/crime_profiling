@@ -1,0 +1,47 @@
+<div class="data-table-area">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="data-table-list">
+                    <div class="basic-tb-hd">
+                        <h2>Cases</h2>
+                    </div>
+                    <div class="basic-tb-hd">
+                        <a class="btn btn-success">New Case</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="data-table-basic" class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th scope="">Case_Number</th>
+                                    <th scope="">Crime_Type</th>
+                                    <th scope="">Description</th>
+                                    <th scope="">Location</th>
+                                    <th scope="">Date_Reported</th>
+                                    <th scope="">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for crime in crimes %}
+                                <tr>
+                                    <td><a href="{% url "crime_detail" crime.pk %}">{{ crime.id }}</a></td>
+                                    <td><a href="{% url "crime_detail" crime.pk %}">{{ crime.crime_type }}</a></td>
+                                    <td>{{ crime.description }}</td>
+                                    <td>{{ crime.location }}</td>
+                                    <td>{{ crime.date_reported }}</td>
+                                    <td>{{ crime.status }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No crimes found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,53 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{% block title %}{% endblock title %}</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="{% static "img/favicon.ico" %}">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,700,900" rel="stylesheet">
+    <link rel="stylesheet" href="{% static "login.css" %}">
+    <link rel="stylesheet" href="{% static "css/font-awesome.min.css" %}">
+
+<body>
+    <div class="container">
+        {% block profiling%}{% endblock%}
+    </div>
+  
+    <script src="{% static "js/vendor/jquery-1.12.4.min.js" %}"></script>
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
+    <script src="{% static "js/wow.min.js" %}"></script>
+    <script src="{% static "js/owl.carousel.min.js" %}"></script>
+    <script src="{% static "js/jquery.scrollUp.min.js" %}"></script>
+    <script src="{% static "js/meanmenu/jquery.meanmenu.js" %}"></script>
+    <script src="{% static "js/counterup/jquery.counterup.min.js" %}"></script>
+    <script src="{% static "js/counterup/waypoints.min.js" %}"></script>
+    <script src="{% static "js/counterup/counterup-active.js" %}"></script>
+    <script src="{% static "js/scrollbar/jquery.mCustomScrollbar.concat.min.js" %}"></script>
+    <script src="{% static "js/jvectormap/jquery-jvectormap-2.0.2.min.js" %}"></script>
+    <script src="{% static "js/jvectormap/jquery-jvectormap-world-mill-en.js" %}"></script>
+    <script src="{% static "js/jvectormap/jvectormap-active.js" %}"></script>
+    <script src="{% static "js/sparkline/jquery.sparkline.min.js" %}"></script>
+    <script src="{% static "js/sparkline/sparkline-active.js" %}"></script>
+    <script src="{% static "js/flot/curvedLines.js" %}"></script>
+    <script src="{% static "js/flot/flot-active.js" %}"></script>
+    <script src="{% static "js/knob/jquery.knob.js" %}"></script>
+    <script src="{% static "js/knob/jquery.appear.js" %}"></script>
+    <script src="{% static "js/knob/knob-active.js" %}"></script>
+    <script src="{% static "js/wave/waves.min.js" %}"></script>
+    <script src="{% static "js/wave/wave-active.js" %}"></script>
+    <script src="{% static "js/todo/jquery.todo.js" %}"></script>
+    <script src="{% static "js/plugins.js" %}"></script>
+    <script src="{% static "js/chat/moment.min.js" %}"></script>
+    <script src="{% static "js/chat/jquery.chat.js" %}"></script>
+    <script src="{% static "js/main.js" %}"></script>
+    <script src="{% static "js/tawk-chat.js" %}"></script>
+    <script src="{% static "js/data-table/jquery.dataTables.min.js" %}"></script>
+    <script src="{% static "js/data-table/data-table-act.js" %}"></script>
+</body>
+
+</html>

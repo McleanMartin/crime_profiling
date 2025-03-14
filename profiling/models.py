@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
-from django.contrib.gis.db import models
+from django.core.validators import FileExtensionValidator
+from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import gettext_lazy as _
 
@@ -37,9 +38,11 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
-        ('police', 'Police'),
+        ('prison officer', 'Prison officer'),
         ('investigator', 'Investigator'),
         ('judge', 'Judge'),
+        ('public', 'public'),
+
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=15, blank=True)
@@ -47,8 +50,7 @@ class CustomUser(AbstractUser):
     groups = models.ManyToManyField(Group, related_name='customuser_set', blank=True)
     user_permissions = models.ManyToManyField(Permission, related_name='customuser_set', blank=True)
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['email']
 
     objects = CustomUserManager()
 
@@ -62,7 +64,7 @@ class CustomUser(AbstractUser):
 class Crime(models.Model):
     crime_type = models.CharField(max_length=100)
     description = models.TextField()
-    location = models.PointField()
+    location = models.TextField()
     date_reported = models.DateField()
     status = models.CharField(max_length=50)
     reported_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -77,20 +79,90 @@ class Offender(models.Model):
     crimes_committed = models.ManyToManyField(Crime, related_name='offenders')
     criminal_record = models.TextField(blank=True)
 
+
+class JudicialCase(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('closed', 'Closed'),
+    )
+    crime = models.ForeignKey(Crime, on_delete=models.CASCADE)
+    judge = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    date_heard = models.DateField()
+    court_location = models.CharField(max_length=255)
+    verdict = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    notes = models.TextField(blank=True)
+    hearing_dates = models.JSONField(blank=True, default=dict)
+    next_hearing_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Case {self.id} - {self.crime.crime_type}"
+
+
 class Investigation(models.Model):
     crime = models.ForeignKey(Crime, on_delete=models.CASCADE)
     investigator = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     date_assigned = models.DateField(auto_now_add=True)
     notes = models.TextField(blank=True)
     status = models.CharField(max_length=50)
-    evidence_files = models.FileField(upload_to='evidence/', blank=True)
-    timeline = models.JSONField(blank=True, default=dict)  
+    evidence_files = models.FileField(
+        upload_to='evidence/%Y/%m/%d/',
+        blank=True,
+        null=True,
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx'])]
+    )
+    timeline = models.JSONField(blank=True, default=dict)
 
-class JudicialCase(models.Model):
-    crime = models.ForeignKey(Crime, on_delete=models.CASCADE)
-    judge = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    date_heard = models.DateField()
-    court_location = models.CharField(max_length=255)
-    verdict = models.CharField(max_length=100, blank=True)
-    notes = models.TextField(blank=True)
-    hearing_dates = models.JSONField(blank=True, default=dict)  
+
+class Party(models.Model):
+    ROLE_CHOICES = [
+        ('victim', 'Victim'),
+        ('witness', 'Witness'),
+        ('suspect', 'Suspect'),
+    ]
+    
+    crime = models.ForeignKey(Crime, on_delete=models.CASCADE, related_name='parties')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    name = models.CharField(max_length=100)
+    contact_info = models.CharField(max_length=255, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    address = models.TextField(blank=True)
+    relationship_to_case = models.TextField(blank=True)
+    additional_info = models.JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.get_role_display()}: {self.name}"
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = (
+        ('crime_created', 'New Crime Reported'),
+        ('investigation_update', 'Investigation Update'),
+        ('hearing_scheduled', 'Court Hearing Scheduled'),
+        ('evidence_added', 'Evidence Added'),
+        ('status_change', 'Case Status Changed'),
+    )
+
+    recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    message = models.TextField()
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
+    related_object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    read = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    metadata = models.JSONField(default=dict, blank=True)
+
+    @property
+    def content_object(self):
+        return self.content_type.get_object_for_this_type(pk=self.related_object_id)
+
+    def __str__(self):
+        return f"{self.get_notification_type_display()} - {self.recipient}"
+
+
+class NotificationPreference(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    preferences = models.JSONField(default=dict)
+    
+    def get_preference(self, notification_type):
+        return self.preferences.get(notification_type, True)

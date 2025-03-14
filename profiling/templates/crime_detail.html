@@ -1,0 +1,79 @@
+{% extends "_layout.html" %}
+{% block title %}Case Details{% endblock title %}
+{% block content %}
+<div class="container">
+    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin-bottom:40px;">
+        <div class="widget-tabs-int">
+            <div class="tab-hd">
+                <h2>{{ crime.crime_type }}</h2>
+                <p>{{ crime.description }}</p>
+            </div>
+            <div class="widget-tabs-list">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#case">Judicial Cases</a></li>
+                    <li><a data-toggle="tab" href="#investigation">Investigations</a></li>
+                    <li><a data-toggle="tab" href="#parties">Parties</a></li>
+                </ul>
+                <div class="tab-content tab-custom-st">
+                    <div id="case" class="tab-pane fade in active">
+                        <div class="tab-ctn">
+                            <div class="bsc-tbl">
+                                <table class="table table-sc-ex">
+                                    <thead>
+                                        <tr>
+                                            <th>Judge</th>
+                                            <th>Verdict</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for case in judicial_cases %}
+                                        <tr>
+                                            <td>{{ case.judge }}</td>
+                                            <td>{{ case.verdict|default:"Pending" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        {% endfor %}
+    
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="investigation" class="tab-pane fade">
+                        <div class="tab-ctn">
+                            <div class="bsc-tbl">
+                                <table class="table table-sc-ex">
+                                    <thead>
+                                        <tr>
+                                            <th>Investigator</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for investigation in investigations %}
+                                        <tr>
+                                            <td>{{ investigation.investigator}} </td>
+                                            <td>{{ investigation.status }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        {% endfor %}
+    
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="parties" class="tab-pane fade">
+                        <div class="tab-ctn">
+                            <p>Duis arcu tortor, suscipit eget, imperdiet nec, imperdiet iaculis, ipsum. Vestibulum purus quam, scelerisque ut, mollis sed, nonummy id, metus. Nulla sit amet est. Praesent ac the massa at ligula laoreet iaculis. Vivamus aliquet elit ac nisl. Nulla porta dolor. Cras dapibus. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus.</p>
+                            <p class="tab-mg-b-0">In hac habitasse platea dictumst. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Nam eget dui. In ac felis quis tortor malesuadan of pretium. Phasellus consectetuer vestibulum elit. Duis lobortis massa imperdiet quam. Pellentesque commodo eros a enim. Vestibulum ante ipsum primis in faucibus orci the luctus et ultrices posuere cubilia Curae; In ac dui quis mi consectetuer lacinia. Phasellus a est. Pellentesque commodo eros a enim. Cras ultricies mi eu turpis hendrerit of fringilla. Donec mollis hendrerit risus. Vestibulum turpis sem, aliquet eget, lobortis pellentesque, rutrum eu, nisl. Praesent egestas neque eu enim. In hac habitasse plat.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock %}

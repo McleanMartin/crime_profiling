@@ -1,0 +1,78 @@
+<div class="notification-dropdown">
+    <button class="notification-bell">
+        🔔
+        {% if unread_count > 0 %}
+        <span class="badge">{{ unread_count }}</span>
+        {% endif %}
+    </button>
+    
+    <div class="notification-list">
+        {% for notification in notifications %}
+        <div class="notification-item {% if not notification.read %}unread{% endif %}" 
+             data-notification-id="{{ notification.id }}"
+             data-url="{% url 'mark_notification_read' notification.id %}">
+            <div class="notification-icon">
+                {% if notification.notification_type == 'crime_created' %}🆕
+                {% elif notification.notification_type == 'hearing_scheduled' %}⚖️
+                {% elif notification.notification_type == 'evidence_added' %}📁
+                {% endif %}
+            </div>
+            <div class="notification-content">
+                <p>{{ notification.message }}</p>
+                <small>{{ notification.timestamp|date:"M d, Y H:i" }}</small>
+                {% if notification.content_object %}
+                <a href="{{ notification.content_object.get_absolute_url }}" class="btn-link">
+                    View Details →
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="notification-empty">
+            No new notifications
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark as read on click
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const notificationId = this.dataset.notificationId;
+                const url = this.dataset.url;
+                
+                if (!this.classList.contains('read')) {
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        }
+                    }).then(() => {
+                        this.classList.add('read');
+                        updateNotificationCount(-1);
+                    });
+                }
+            });
+        });
+    
+        function updateNotificationCount(change) {
+            const badge = document.querySelector('.notification-bell .badge');
+            if (badge) {
+                const current = parseInt(badge.textContent) || 0;
+                const newCount = current + change;
+                badge.textContent = newCount > 0 ? newCount : '';
+            }
+        }
+    
+        // Poll for new notifications every 60 seconds
+        setInterval(() => {
+            fetch('/notifications/count/')
+                .then(response => response.json())
+                .then(data => {
+                    updateNotificationCount(data.count - currentCount);
+                });
+        }, 60000);
+    });
+</script>

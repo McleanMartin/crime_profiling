@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="card">
+            <h3>Total Crimes</h3>
+            <div class="value">{{ crime_stats.total_crimes }}</div>
+        </div>
+        
+        <div class="card">
+            <h3>Active Investigations</h3>
+            <div class="value">{{ investigation_stats.active_investigations }}</div>
+        </div>
+        
+        <div class="card">
+            <h3>Upcoming Hearings</h3>
+            <div class="value">{{ judicial_stats.upcoming_hearings|length }}</div>
+        </div>
+    </div>
+
+    <!-- Crime Type Distribution -->
+    <div class="dashboard-section">
+        <h2>Crime Type Distribution</h2>
+        <canvas id="crimeTypeChart"></canvas>
+    </div>
+
+    <!-- Recent Investigations -->
+    <div class="dashboard-section">
+        <h2>Recent Investigations</h2>
+        <div class="investigation-list">
+            {% for inv in investigation_stats.recent_investigations %}
+            <div class="investigation-item">
+                <h4>{{ inv.crime.crime_type }}</h4>
+                <div class="meta">
+                    <span>Case #{{ inv.crime.crime_number }}</span>
+                    <span>Status: {{ inv.status|title }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Judicial Case Status -->
+    <div class="dashboard-section">
+        <h2>Case Status</h2>
+        <canvas id="caseStatusChart"></canvas>
+    </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Initialize Charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Crime Type Chart
+    new Chart(document.getElementById('crimeTypeChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ crime_stats.crimes_by_type|map_attribute:"crime_type"|safe }},
+            datasets: [{
+                data: {{ crime_stats.crimes_by_type|map_attribute:"count"|safe }},
+                backgroundColor: ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0']
+            }]
+        }
+    });
+
+    // Case Status Chart
+    new Chart(document.getElementById('caseStatusChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ judicial_stats.case_status|map_attribute:"status"|safe }},
+            datasets: [{
+                label: 'Cases',
+                data: {{ judicial_stats.case_status|map_attribute:"count"|safe }},
+                backgroundColor: '#36a2eb'
+            }]
+        }
+    });
+});
+</script>
+{% endblock %}

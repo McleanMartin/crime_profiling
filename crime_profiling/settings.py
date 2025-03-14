@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-awm4w$6(z@$11msh9j4(o%ti-$fcjdl9ncrk+a(sz%0r#8(25p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['profiler.pythonanywhere.com','127.0.0.1']
 
 
 # Application definition
@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'profiling.utils.context_processors.notifications',
             ],
         },
     },
@@ -76,14 +77,21 @@ WSGI_APPLICATION = 'crime_profiling.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#         'NAME': 'Profiling',
+#         'USER': 'postgres',
+#         'PASSWORD': 'pa22w0rd',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'Profiling',
-        'USER': 'postgres',
-        'PASSWORD': 'pa22w0rd',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'central.db',
     }
 }
 
@@ -129,3 +137,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+AUTH_USER_MODEL = 'profiling.CustomUser'
+

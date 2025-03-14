@@ -1,17 +1,18 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .api import UserViewSet, CrimeViewSet, OffenderViewSet, InvestigationViewSet, JudicialCaseViewSet
-from profiling import views
-
-router = DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'crimes', CrimeViewSet)
-router.register(r'offenders', OffenderViewSet)
-router.register(r'investigations', InvestigationViewSet)
-router.register(r'judicial_cases', JudicialCaseViewSet)
+from django.urls import path
+from .views import *
 
 urlpatterns = [
-    path('api/', include(router.urls)),
-    path('',views.index_view,name="index"),
-    path('dashboard/',views.profiling_view,name="profiling_view"),
+    path('', index_view, name='index'),
+    path('crimes/', crime_list, name='crime_list'),
+    path('crimes/<int:pk>/', crime_detail, name='crime_detail'),
+    path('crimes/create/', CrimeCreateView.as_view(), name='crime_create'),
+    path('crimes/<int:pk>/update/', CrimeUpdateView.as_view(), name='crime_update'),
+    path('court_roll/', court_roll, name='court_roll'),
+    path('investigations/<int:pk>/', investigation_detail, name='investigation_detail'),
+    path('investigations/<int:investigation_id>/upload_evidence/', upload_evidence, name='upload_evidence'),
+    path('judicial_cases/<int:pk>/update_status/', update_case_status, name='update_case_status'),
+    path('judicial_cases/<int:pk>/schedule_hearing/', schedule_next_hearing, name='schedule_next_hearing'),
+    path('notifications/', notifications_view, name='notifications'),
+    path('notifications/mark-read/<int:pk>/', mark_notification_read, name='mark_notification_read'),
+    path('logout/', Logout_view, name='logout'),
 ]
