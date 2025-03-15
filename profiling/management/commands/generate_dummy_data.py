@@ -117,7 +117,7 @@ class Command(BaseCommand):
             crime_type = random.choice(crime_types)
             description = random.choice(crime_descriptions[crime_type])  # Select a realistic description
             location = random.choice(ZIMBABWEAN_CITIES)  # Use Zimbabwean cities for realism
-            date_reported = fake.date_between(start_date='-1y', end_date='today')  # Random date within the last year
+            date_reported = fake.date_between(start_date='-4y', end_date='today')  # Random date within the last year
             status = random.choice(['reported', 'under_investigation', 'closed'])
             reported_by = random.choice(users)  # Assign a random police user
             tags = ', '.join(fake.words(nb=3))  # Add random tags for categorization
@@ -151,11 +151,6 @@ class Command(BaseCommand):
         judges = CustomUser.objects.filter(role='judge')
         crimes = Crime.objects.all()
         for crime in crimes:
-            hearing_dates = {
-                'hearing1': datetime.strptime(fake.date(), '%Y-%m-%d').isoformat(),
-                'hearing2': datetime.strptime(fake.date(), '%Y-%m-%d').isoformat()
-            }
-
             JudicialCase.objects.create(
                 crime=crime,
                 judge=random.choice(judges),
@@ -164,7 +159,7 @@ class Command(BaseCommand):
                 verdict=random.choice(['guilty', 'not_guilty', 'pending']),
                 status=random.choice(['pending', 'in_progress', 'closed']),
                 notes=fake.text(),
-                hearing_dates=json.dumps(hearing_dates),
+                hearing_date=fake.date_between(start_date='today', end_date='+1y'),
                 next_hearing_date=fake.date_between(start_date='today', end_date='+1y')
             )
         self.stdout.write("JudicialCases created.")
@@ -173,11 +168,6 @@ class Command(BaseCommand):
         investigators = CustomUser.objects.filter(role='investigator')
         crimes = Crime.objects.all()
         for crime in crimes:
-            timeline = {
-                'event1': datetime.strptime(fake.date(), '%Y-%m-%d').isoformat(),
-                'event2': datetime.strptime(fake.date(), '%Y-%m-%d').isoformat()
-            }
-
             Investigation.objects.create(
                 crime=crime,
                 investigator=random.choice(investigators),
@@ -185,6 +175,5 @@ class Command(BaseCommand):
                 notes=fake.text(),
                 status=random.choice(['open', 'closed', 'pending']),
                 evidence_files=None,
-                timeline=json.dumps(timeline)
             )
         self.stdout.write("Investigations created.")

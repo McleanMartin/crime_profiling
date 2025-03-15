@@ -20,17 +20,21 @@
                                     <th scope="col">Court_Location</th>
                                     <th scope="col">Hearing_Time</th>
                                     <th scope="col">Status</th>
+                                    <th scope="col">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for case in cases %}
                                     <tr>
-                                        <td>{{ case.id }}</td>
+                                        <td><a href="{% url "crime_detail" case.crime.pk %}">{{ case.crime.case_number }}</a></td>
                                         <td>{{ case.crime.crime_type }}</td>
                                         <td>{{ case.judge.email }}</td>
                                         <td>{{ case.court_location }}</td>
                                         <td>{{ case.date_heard }}</td>
-                                        <td>{{ case.verdict|default:"Pending" }}</td>
+                                        <td>{{ case.status }}</td>
+                                        <td>
+                                            <button class="btn btn-success btn-xs">update next hearing date</button>
+                                        </td>
                                     </tr>
                                     {% empty %}
                                     <tr>

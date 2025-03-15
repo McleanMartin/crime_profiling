@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
@@ -63,6 +64,7 @@ class CustomUser(AbstractUser):
 
 class Crime(models.Model):
     crime_type = models.CharField(max_length=100)
+    case_number = models.CharField(max_length=50)
     description = models.TextField()
     location = models.TextField()
     date_reported = models.DateField()
@@ -93,7 +95,7 @@ class JudicialCase(models.Model):
     verdict = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     notes = models.TextField(blank=True)
-    hearing_dates = models.JSONField(blank=True, default=dict)
+    hearing_date = models.DateField(blank=True, null=True)
     next_hearing_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
@@ -112,7 +114,6 @@ class Investigation(models.Model):
         null=True,
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'docx', 'xlsx'])]
     )
-    timeline = models.JSONField(blank=True, default=dict)
 
 
 class Party(models.Model):

@@ -131,13 +131,8 @@ def investigation_detail(request, pk):
 
 
 def court_roll(request):
-    selected_date = request.GET.get('date')
-    if selected_date:
-        selected_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
-    else:
-        selected_date = timezone.now().date()
-    cases = JudicialCase.objects.filter(date_heard=selected_date)
-    return render(request, 'court_roll.html', {'cases': cases, 'selected_date': selected_date})
+    cases = JudicialCase.objects.all().order_by('-date_heard')
+    return render(request, 'court_roll.html',{'cases': cases})
 
 def update_case_status(request, pk):
     case = get_object_or_404(JudicialCase, pk=pk)

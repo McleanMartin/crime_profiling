@@ -1,42 +1,52 @@
 {% extends "_layout.html" %}
+{% load json_date %}
 {% block title %}Case Details{% endblock title %}
 {% block content %}
 <div class="container">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin-bottom:40px;">
         <div class="widget-tabs-int">
             <div class="tab-hd">
-                <h2>{{ crime.crime_type }}</h2>
+                <h2>{{ crime.case_number }} - {{ crime.crime_type }}</h2>
                 <p>{{ crime.description }}</p>
+                <button type="button" class="btn  btn-success" data-toggle="modal" data-target="#myModalthree">Edit Case</button>
+                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModalnine">Delete Case</button>
             </div>
             <div class="widget-tabs-list">
                 <ul class="nav nav-tabs">
-                    <li class="active"><a data-toggle="tab" href="#case">Judicial Cases</a></li>
-                    <li><a data-toggle="tab" href="#investigation">Investigations</a></li>
+                    <li class="active"><a data-toggle="tab" href="#case">Judges</a></li>
+                    <li><a data-toggle="tab" href="#investigation">Investigators</a></li>
                     <li><a data-toggle="tab" href="#parties">Parties</a></li>
+                    <li><a data-toggle="tab" href="#evidence">Evidence Files</a></li>
                 </ul>
                 <div class="tab-content tab-custom-st">
                     <div id="case" class="tab-pane fade in active">
                         <div class="tab-ctn">
-                            <div class="bsc-tbl">
-                                <table class="table table-sc-ex">
-                                    <thead>
-                                        <tr>
-                                            <th>Judge</th>
-                                            <th>Verdict</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for case in judicial_cases %}
+                            <table class="table table-sc-ex ">
+                                <thead>
+                                    <tr>
+                                        <th>Judge</th>
+                                        <th>Hearing Dates</th>
+                                        <th>Court Location</th>
+                                        <th>Verdict</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for case in judicial_cases %}
                                         <tr>
                                             <td>{{ case.judge }}</td>
+                                            <td>{{case.hearing_date}}</td>
+                                            <td>{{ case.court_location }}</td>
                                             <td>{{ case.verdict|default:"Pending" }}</td>
+                                            <td><button type="button" class="btn  btn-success" data-toggle="modal" data-target="#myModaltwo">Update Verdict</button></td>
                                         </tr>
-                                        {% empty %}
-                                        {% endfor %}
-    
-                                    </tbody>
-                                </table>
-                            </div>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No cases found.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     <div id="investigation" class="tab-pane fade">
@@ -69,6 +79,12 @@
                             <p class="tab-mg-b-0">In hac habitasse platea dictumst. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Nam eget dui. In ac felis quis tortor malesuadan of pretium. Phasellus consectetuer vestibulum elit. Duis lobortis massa imperdiet quam. Pellentesque commodo eros a enim. Vestibulum ante ipsum primis in faucibus orci the luctus et ultrices posuere cubilia Curae; In ac dui quis mi consectetuer lacinia. Phasellus a est. Pellentesque commodo eros a enim. Cras ultricies mi eu turpis hendrerit of fringilla. Donec mollis hendrerit risus. Vestibulum turpis sem, aliquet eget, lobortis pellentesque, rutrum eu, nisl. Praesent egestas neque eu enim. In hac habitasse plat.</p>
                         </div>
                     </div>
+                    <div id="evidence" class="tab-pane fade">
+                        <div class="tab-ctn">
+                            <p>Duis arcu tortor, suscipit eget, imperdiet nec, imperdiet iaculis, ipsum. Vestibulum purus quam, scelerisque ut, mollis sed, nonummy id, metus. Nulla sit amet est. Praesent ac the massa at ligula laoreet iaculis. Vivamus aliquet elit ac nisl. Nulla porta dolor. Cras dapibus. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus.</p>
+                            <p class="tab-mg-b-0">In hac habitasse platea dictumst. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Nam eget dui. In ac felis quis tortor malesuadan of pretium. Phasellus consectetuer vestibulum elit. Duis lobortis massa imperdiet quam. Pellentesque commodo eros a enim. Vestibulum ante ipsum primis in faucibus orci the luctus et ultrices posuere cubilia Curae; In ac dui quis mi consectetuer lacinia. Phasellus a est. Pellentesque commodo eros a enim. Cras ultricies mi eu turpis hendrerit of fringilla. Donec mollis hendrerit risus. Vestibulum turpis sem, aliquet eget, lobortis pellentesque, rutrum eu, nisl. Praesent egestas neque eu enim. In hac habitasse plat.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -76,4 +92,94 @@
     
 </div>
 
+{% comment %} Edit Case {% endcomment %}
+<div class="modal fade" id="myModalthree" role="dialog">
+    <div class="modal-dialog modal-large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Edit Crime Case</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'crime_create' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="crime_type">Crime Type</label>
+                        <input type="text" class="form-control" id="crime_type" name="crime_type" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="date_reported">Date Reported</label>
+                        <input type="date" class="form-control" id="date_reported" name="date_reported" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select class="form-control" id="status" name="status" required>
+                            <option value="reported">Reported</option>
+                            <option value="under_investigation">Under Investigation</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reported_by">Reported By</label>
+                        <input type="text" class="form-control" id="reported_by" name="reported_by" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated)</label>
+                        <input type="text" class="form-control" id="tags" name="tags">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% comment %} Delete Case {% endcomment %}
+<div class="modal fade" id="myModalnine" role="dialog">
+    <div class="modal-dialog modals-default nk-red">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h2>Modal title</h2>
+                <p>Curabitur blandit mollis lacus. Nulla sit amet est. Suspendisse nisl elit, rhoncus eget, elementum ac, condimentum eget, diam. Donec mi odio, faucibus at, scelerisque quis, convallis in, nisi. Cras sagittis.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Save changes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% comment %} Update Verdict {% endcomment %}
+<div class="modal fade" id="myModaltwo" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h2>Modal title</h2>
+                <p>Curabitur blandit mollis lacus. Nulla sit amet est. Suspendisse nisl elit, rhoncus eget, elementum ac, condimentum eget, diam. Donec min odio, faucibus at, scelerisquese quis, convallisdse. Cras sagittis.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Save changes</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

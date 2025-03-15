@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import send_mail
-
+from profiling.models import *
 
 def create_notification(
     recipient, 
