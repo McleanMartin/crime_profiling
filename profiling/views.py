@@ -149,8 +149,6 @@ def update_crime(request, pk):
 def delete_crime(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     rolls = JudicialCase.objects.filter(crime=crime).delete()
-    # for roll in rolls:
-    #     roll.delete()
     crime.delete()
     return redirect(reverse('crime_list'))
 
