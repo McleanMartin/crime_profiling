@@ -1,5 +1,32 @@
 from django import forms
 from .models import *
+from django.contrib.auth.forms import UserCreationForm
+
+
+class CustomUserCreationForm(UserCreationForm):
+    role = forms.ChoiceField(choices=CustomUser.ROLE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    phone_number = forms.CharField(max_length=15, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}))
+    department = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter department'}))
+    first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter first name'}))
+    last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter last name'}))
+
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email', 'first_name', 'last_name', 'role', 'phone_number', 'department', 'password1', 'password2')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap classes to all fields
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+            if field_name == 'username':
+                field.widget.attrs.update({'placeholder': 'Enter username'})
+            elif field_name == 'email':
+                field.widget.attrs.update({'placeholder': 'Enter email'})
+            elif field_name == 'password1':
+                field.widget.attrs.update({'placeholder': 'Enter password'})
+            elif field_name == 'password2':
+                field.widget.attrs.update({'placeholder': 'Confirm password'})
 
 class EvidenceUploadForm(forms.ModelForm):
     class Meta:

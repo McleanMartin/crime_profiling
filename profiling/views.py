@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic import CreateView, ListView
 from django.contrib.auth import login,logout,authenticate
 from django.views.decorators.cache import cache_page
 from django.http import JsonResponse
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.db.models import Q, Count
 from django.db.models.functions import ExtractMonth
 from .models import *
+from .decorators import *
 
 
 @cache_page(60 * 15)
@@ -119,6 +121,7 @@ def crime_detail(request, pk):
     })
 
 
+@police_officer_required
 def create_crime(request):
     if request.method == 'POST':
         form = CrimeForm(request.POST, request.FILES)
@@ -130,6 +133,7 @@ def create_crime(request):
             return redirect(reverse('crime_list'))
     return redirect(reverse('crime_list'))
 
+@police_officer_required
 def update_crime(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     if request.method == 'POST':
@@ -141,6 +145,7 @@ def update_crime(request, pk):
         form = CrimeForm(instance=crime) 
     return redirect(reverse('crime_list'))
 
+@police_officer_required
 def delete_crime(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     rolls = JudicialCase.objects.filter(crime=crime).delete()
@@ -149,6 +154,7 @@ def delete_crime(request, pk):
     crime.delete()
     return redirect(reverse('crime_list'))
 
+@investigator_required
 def upload_evidence(request, investigation_id):
     investigation = get_object_or_404(Investigation, id=investigation_id)
     if request.method == 'POST':
@@ -170,6 +176,7 @@ def court_roll(request):
     cases = JudicialCase.objects.all().order_by('-date_heard')
     return render(request, 'court_roll.html',{'cases': cases})
 
+@judge_required
 def update_case_status(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     case = JudicialCase.objects.get(crime=crime)
@@ -182,15 +189,16 @@ def update_case_status(request, pk):
         form = JudicialCaseStatusForm(instance=case)
     return redirect(reverse('crime_detail'))
 
+@judge_required
 def schedule_next_hearing(request, pk):
     case = get_object_or_404(JudicialCase, pk=pk)
     if request.method == 'POST':
         next_hearing_date = request.POST.get('next_hearing_date')
         case.next_hearing_date = next_hearing_date
-        print(next_hearing_date)
+        print(case.next_hearing_date)
         case.save() 
-        return redirect(reverse('court_roll')) 
-    return redirect(reverse('court_roll'))
+        return redirect(reverse('crime_detail', args=[case.pk])) 
+    return redirect(reverse('crime_detail', args=[case.pk]))
 
 
 def notifications_view(request):
@@ -209,8 +217,20 @@ def mark_notification_read(request, pk):
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error'}, status=400)
 
+def custom_user_list_view(request):
+    users = CustomUser.objects.all().order_by('last_name')
+    form = CustomUserCreationForm()
+    return render(request, 'users.html', {'users': users,'form':form})
 
-
+def custom_user_create_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save() 
+            return redirect(reverse_lazy('users'))
+    else:
+        form = CustomUserCreationForm() 
+    return redirect(reverse_lazy('users'))
 
 def Logout_view(request):
     logout(request)

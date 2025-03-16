@@ -42,7 +42,7 @@ class CustomUser(AbstractUser):
         ('prison officer', 'Prison officer'),
         ('investigator', 'Investigator'),
         ('judge', 'Judge'),
-        ('public', 'public'),
+        ('police officer', 'Police Officer'),
 
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
@@ -59,7 +59,7 @@ class CustomUser(AbstractUser):
         ordering = ["email"]
 
     def __str__(self):
-        return self.email
+        return self.first_name + ' ' + self.last_name
 
 
 class Crime(models.Model):
@@ -99,7 +99,7 @@ class JudicialCase(models.Model):
     next_hearing_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
-        return f"Case {self.id} - {self.crime.crime_type}"
+        return f"Case {self.crime.case_number} - {self.crime.crime_type}"
 
 
 class Investigation(models.Model):
