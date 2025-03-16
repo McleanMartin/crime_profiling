@@ -1,4 +1,4 @@
-
+from profiling.models import Notification
 
 def notifications(request):
     if request.user.is_authenticated:

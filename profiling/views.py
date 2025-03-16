@@ -3,20 +3,23 @@ from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth import login,logout,authenticate
 from django.views.decorators.cache import cache_page
 from django.http import JsonResponse
+from django.urls import reverse_lazy
 from django.shortcuts import render
 from django.utils import timezone
 from datetime import datetime
 from .forms import *
 from django.urls import reverse
 from django.db.models import Q, Count
+from django.db.models.functions import ExtractMonth
 from .models import *
 
 
 @cache_page(60 * 15)
 def dashboard(request):
-    # Crime Statistics
     crime_stats = {
         'total_crimes': Crime.objects.count(),
+        'active_crimes': Crime.objects.exclude(status='closed').count(),
+        'closed_crimes': Crime.objects.filter(status='closed').count(),
         'crimes_by_type': Crime.objects.values('crime_type')
                              .annotate(count=Count('id'))
                              .order_by('-count')[:5],
@@ -24,14 +27,29 @@ def dashboard(request):
                                  .annotate(count=Count('id')),
     }
 
-    # Investigation Metrics
+    crimes_by_type_with_monthly_counts = []
+    for crime_type in Crime.objects.values_list('crime_type', flat=True).distinct():
+        monthly_counts = []
+        for month in range(1, 13):
+            count = Crime.objects.filter(
+                crime_type=crime_type,
+                date_reported__month=month
+            ).count()
+            monthly_counts.append(count)
+        
+        crimes_by_type_with_monthly_counts.append({
+            'crime_type': crime_type,
+            'monthly_counts': monthly_counts,
+        })
+
+    crime_stats['crimes_by_type_with_monthly_counts'] = crimes_by_type_with_monthly_counts
+
     investigation_stats = {
-        'active_investigations': Investigation.objects.filter(status='active').count(),
+        'active_investigations': Investigation.objects.filter(status='open').count(),
         'recent_investigations': Investigation.objects.select_related('crime')
                                        .order_by('-date_assigned')[:5],
     }
 
-    # Judicial Metrics
     judicial_stats = {
         'upcoming_hearings': JudicialCase.objects.filter(
             Q(next_hearing_date__gte=timezone.now()) |
@@ -42,7 +60,6 @@ def dashboard(request):
     }
 
 
-    # Party Statistics
     party_stats = {
         'total_parties': Party.objects.count(),
         'party_roles': Party.objects.values('role')
@@ -68,14 +85,16 @@ def index_view(request):
     return render(request, 'login.html')
 
 def crime_list(request):
+    form = CrimeForm()
     query = request.GET.get('q')
     crimes = Crime.objects.all()
     if query:
         crimes = crimes.filter(Q(crime_type__icontains=query) | Q(description__icontains=query))
-    return render(request, 'crime_list.html', {'crimes': crimes})
+    return render(request, 'crime_list.html', {'crimes': crimes,'form':form})
 
 def crime_detail(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
+    form = CrimeForm(instance=crime)
     investigations = Investigation.objects.filter(crime=crime)
     judicial_cases = JudicialCase.objects.filter(crime=crime)
     parties = crime.parties.all()
@@ -95,23 +114,40 @@ def crime_detail(request, pk):
         'investigations': investigations,
         'judicial_cases': judicial_cases,
         'parties': parties,
-        'party_form': party_form
+        'party_form': party_form,
+        'form':form,
     })
 
-class CrimeCreateView(CreateView):
-    model = Crime
-    form_class = CrimeForm
-    template_name = 'crime_form.html'
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.fields['date_reported'].initial = timezone.now().date()
-        return form
+def create_crime(request):
+    if request.method == 'POST':
+        form = CrimeForm(request.POST, request.FILES)
+        if form.is_valid():
+            crime = form.save(commit=False)
+            crime.date_reported = timezone.now().date()
+            crime.reported_by = request.user
+            crime.save()
+            return redirect(reverse('crime_list'))
+    return redirect(reverse('crime_list'))
 
-class CrimeUpdateView(UpdateView):
-    model = Crime
-    form_class = CrimeForm
-    template_name = 'crime_form.html'
+def update_crime(request, pk):
+    crime = get_object_or_404(Crime, pk=pk)
+    if request.method == 'POST':
+        form = CrimeForm(request.POST, request.FILES, instance=crime)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('crime_list')) 
+    else:
+        form = CrimeForm(instance=crime) 
+    return redirect(reverse('crime_list'))
+
+def delete_crime(request, pk):
+    crime = get_object_or_404(Crime, pk=pk)
+    rolls = JudicialCase.objects.filter(crime=crime).delete()
+    # for roll in rolls:
+    #     roll.delete()
+    crime.delete()
+    return redirect(reverse('crime_list'))
 
 def upload_evidence(request, investigation_id):
     investigation = get_object_or_404(Investigation, id=investigation_id)
@@ -135,35 +171,33 @@ def court_roll(request):
     return render(request, 'court_roll.html',{'cases': cases})
 
 def update_case_status(request, pk):
-    case = get_object_or_404(JudicialCase, pk=pk)
+    crime = get_object_or_404(Crime, pk=pk)
+    case = JudicialCase.objects.get(crime=crime)
     if request.method == 'POST':
-        form = JudicialCaseStatusForm(request.POST, instance=case)
-        if form.is_valid():
-            form.save()
-            # Send notification (see step 3)
-            return redirect(reverse('judicial_case_detail', args=[case.id]))
+        verdict = request.POST.get('verdict')
+        case.verdict = verdict
+        case.save()
+        return redirect(reverse('crime_detail', args=[case.pk]))
     else:
         form = JudicialCaseStatusForm(instance=case)
-    return render(request, 'partials/update_case_status_form.html', {'form': form})
+    return redirect(reverse('crime_detail'))
 
 def schedule_next_hearing(request, pk):
     case = get_object_or_404(JudicialCase, pk=pk)
     if request.method == 'POST':
-        form = NextHearingForm(request.POST, instance=case)
-        if form.is_valid():
-            form.save()
-            # Send notification (see step 3)
-            return redirect(reverse('judicial_case_detail', args=[case.id]))
-    else:
-        form = NextHearingForm(instance=case)
-    return render(request, 'partials/schedule_next_hearing_form.html', {'form': form})
+        next_hearing_date = request.POST.get('next_hearing_date')
+        case.next_hearing_date = next_hearing_date
+        print(next_hearing_date)
+        case.save() 
+        return redirect(reverse('court_roll')) 
+    return redirect(reverse('court_roll'))
 
 
 def notifications_view(request):
     notifications = Notification.objects.filter(recipient=request.user)\
         .order_by('-timestamp')[:10]
         
-    return render(request, 'notifications/notification_list.html', {
+    return render(request, 'partials/notifications.html', {
         'notifications': notifications
     })
 
