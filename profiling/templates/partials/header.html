@@ -1,67 +1,41 @@
 {% load static %}
-<!-- Start Header Top Area -->
-<div class="header-top-area">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12">
-                <div class="logo-area">
-                    <a href="#"><img src="{% static "images/logo.webp" %}" height="50" width="50" alt="" /></a>
-                    <h3>Crime Profiler</h3>
-                </div>
-            </div>
-            <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
-                <div class="header-top-menu">
-                    <ul class="nav navbar-nav notika-top-nav">
-                        <li class="nav-item nc-al"><a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><span><i class="notika-icon notika-alarm"></i></span></a>
-                            <div role="menu" class="dropdown-menu message-dd notification-dd animated zoomIn">
-                                <div class="hd-mg-tt">
-                                    <h2>Notifications</h2>
-                                </div>
-                                <div class="hd-message-info">
-                                    {% for notification in recent_notifications  %}
-                                    <a href="#">
-                                        <div class="hd-message-sn">
-                                            <div class="hd-message-img">
-                                                <img src="img/post/1.jpg" alt="" />
-                                            </div>
-                                            <div class="hd-mg-ctn">
-                                                <h3>David Belle</h3>
-                                                <p>Cum sociis natoque penatibus et magnis dis parturient montes</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    {% empty %}
-
-                                    {% endfor %}
-                                    
-                                </div>
-                                {% if recent_notifications  %}
-                                <div class="hd-mg-va">
-                                    <a href="#">View All</a>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </li>
-                        <li class="nav-item nc-al"><a href="#" data-toggle="dropdown" role="button" aria-expanded="false" class="nav-link dropdown-toggle"><span><i class="notika-icon notika-support"></i></span><div class="spinner4 spinner-4"></div><div class="ntd-ctn"><span>{{ unread_count }}</span></div> <small>{{user.username|capfirst}}</small></a>
-                            <div role="menu" class="dropdown-menu message-dd notification-dd animated zoomIn">
-                                <div class="hd-mg-tt">
-                                    <h2><strong>{{user.username|capfirst}}</strong></h2>
-                                </div>
-                                <div class="hd-message-info">
-                                    <a href="#">
-                                        <div class="hd-message-sn">
-                                            <div class="hd-mg-ctn container">
-                                                <a href="{% url "logout" %}" class="btn btn-danger btn-sm">End Session</a>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- End Header Top Area -->
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">
+            <img src="{% static "images/logo.png" %}" width="40" height="40" class="d-inline-block align-top" alt="">
+            
+        </a>
+        <a class="navbar-brand" href="#">
+            Integrated Electronic Case Management System
+        </a>
+        
+      </div>
+  
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="{% url "crime_list" %}">Cases</a></li>
+          <li><a href="{% url "court_roll" %}">Court Rolls</a></li>
+          <li><a href="{% url "trends" %}">Trends</a></li>
+          <li><a href="{% url "users" %}">Accounts</a></li>
+          <li><a href="#">Reports</a></li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{user.username|capfirst}}<span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="#">Profile</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="#">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>

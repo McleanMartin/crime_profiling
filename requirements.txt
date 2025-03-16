@@ -1,9 +1,14 @@
 asgiref==3.8.1
 channels==4.2.0
+chardet==5.2.0
 Django==5.1.6
 django-bootstrap5==24.3
 django-jsonfield==1.4.1
 djangorestframework==3.15.2
+Faker==36.1.1
+pillow==11.1.0
 psycopg2-binary==2.9.10
+reportlab==4.3.1
 six==1.17.0
 sqlparse==0.5.3
+tzdata==2025.1

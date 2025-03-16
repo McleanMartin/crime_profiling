@@ -1,11 +1,10 @@
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import Group, Permission
-from django.utils import timezone
-import random
+from django.contrib.auth.models import Group
 from datetime import datetime, timedelta
 from faker import Faker
-from profiling.models import CustomUser, Crime, Offender, JudicialCase, Investigation
+from profiling.models import *
 import json
+import random
 
 fake = Faker()
 
@@ -21,7 +20,7 @@ class Command(BaseCommand):
     help = 'Generates dummy data for the crime profiling application'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("Generating dummy data...")
+        self.stdout.write(self.style.SUCCESS("Generating dummy data..."))
 
         # Create Groups and Permissions
         self.create_groups_and_permissions()
@@ -33,7 +32,7 @@ class Command(BaseCommand):
         self.create_crimes()
 
         # Create Offenders
-        self.create_offenders()
+        self.create_dummy_parties()
 
         # Create JudicialCases
         self.create_judicial_cases()
@@ -41,17 +40,19 @@ class Command(BaseCommand):
         # Create Investigations
         self.create_investigations()
 
-        self.stdout.write("Dummy data generation complete!")
+        self.stdout.write(self.style.SUCCESS("Dummy data generation complete!"))
 
     def create_groups_and_permissions(self):
         group_names = ['police', 'investigator', 'judge']
         for name in group_names:
             Group.objects.get_or_create(name=name)
-        self.stdout.write("Groups and permissions created.")
+        self.stdout.write(self.style.SUCCESS("Groups and permissions created."))
 
     def create_custom_users(self):
         roles = ['police', 'investigator', 'judge']
         for _ in range(10):
+            first_name = fake.first_name()
+            last_name = fake.last_name()
             email = fake.email()
             username = email  # Use the email as the username
             role = random.choice(roles)
@@ -65,9 +66,11 @@ class Command(BaseCommand):
                 password='password123',
                 role=role,
                 phone_number=phone_number,
-                department=department
+                department=department,
+                first_name=first_name,
+                last_name=last_name
             )
-        self.stdout.write("CustomUsers created.")
+        self.stdout.write(self.style.SUCCESS("CustomUsers created."))
 
     def create_crimes(self):
         """Generate dummy crime records with realistic descriptions."""
@@ -131,29 +134,80 @@ class Command(BaseCommand):
                 reported_by=reported_by,
                 tags=tags
             )
-        self.stdout.write("Dummy crime records with realistic descriptions created successfully.")
+        self.stdout.write(self.style.SUCCESS("Dummy crime records with realistic descriptions created successfully."))
 
-    def create_offenders(self):
-        crimes = Crime.objects.all()
-        for _ in range(15):
-            offender = Offender.objects.create(
-                name=fake.name(),
-                date_of_birth=fake.date_of_birth(minimum_age=18, maximum_age=60),
-                address=fake.address(),
-                email=fake.email(),
-                social_media_links=json.dumps({'twitter': fake.url(), 'facebook': fake.url()}),
-                criminal_record=fake.text()
-            )
-            offender.crimes_committed.set(random.sample(list(crimes), random.randint(1, 3)))
-        self.stdout.write("Offenders created.")
+    def create_dummy_parties(self):
+        # Fetch all crimes from the database
+        crimes = list(Crime.objects.all())
+        if not crimes:
+            self.stdout.write(self.style.ERROR('No crimes found in the database. Please add crimes first.'))
+            return
+
+        # Number of dummy parties to create
+        num_parties = 20
+
+        for _ in range(num_parties):
+            try:
+                # Randomly select a crime
+                crime = random.choice(crimes)
+
+                # Randomly select a role
+                role = random.choice(['victim', 'witness', 'suspect'])
+
+                # Generate fake data
+                name = fake.name()
+                contact_info = fake.phone_number()
+                date_of_birth = fake.date_of_birth(minimum_age=18, maximum_age=80)
+                address = fake.address()
+                relationship_to_case = fake.sentence()
+                additional_info = json.dumps({
+                    'occupation': fake.job(),
+                    'notes': fake.text()
+                })
+
+                # Create the Party instance
+                party = Party.objects.create(
+                    crime=crime,
+                    role=role,
+                    name=name,
+                    contact_info=contact_info,
+                    date_of_birth=date_of_birth,
+                    address=address,
+                    relationship_to_case=relationship_to_case,
+                    additional_info=additional_info
+                )
+                self.stdout.write(self.style.SUCCESS(f'Created party: {party}'))
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(f'Error creating party: {e}'))
+
+        self.stdout.write(self.style.SUCCESS(f'Successfully created {num_parties} dummy parties.'))
 
     def create_judicial_cases(self):
-        judges = CustomUser.objects.filter(role='judge')
-        crimes = Crime.objects.all()
+        judges = list(CustomUser.objects.filter(role='judge'))  # Fetch all judges
+        crimes = list(Crime.objects.all())  # Fetch all crimes
+
+        if not judges:
+            self.stdout.write(self.style.ERROR('No judges found in the database. Please add judges first.'))
+            return
+
+        if not crimes:
+            self.stdout.write(self.style.ERROR('No crimes found in the database. Please add crimes first.'))
+            return
+
+        # Shuffle the list of crimes to randomize assignment
+        random.shuffle(crimes)
+
         for crime in crimes:
+            if not judges:
+                self.stdout.write(self.style.WARNING('No more judges available to assign to cases.'))
+                break
+
+            # Assign a judge to the case
+            judge = judges.pop()  # Remove the judge from the list to ensure no reuse for this case
+
             JudicialCase.objects.create(
                 crime=crime,
-                judge=random.choice(judges),
+                judge=judge,
                 date_heard=fake.date_between(start_date='today', end_date='+1y'),
                 court_location=random.choice(ZIMBABWEAN_CITIES),  # Use Zimbabwean cities
                 verdict=random.choice(['guilty', 'not_guilty', 'pending']),
@@ -162,7 +216,9 @@ class Command(BaseCommand):
                 hearing_date=fake.date_between(start_date='today', end_date='+1y'),
                 next_hearing_date=fake.date_between(start_date='today', end_date='+1y')
             )
-        self.stdout.write("JudicialCases created.")
+            self.stdout.write(self.style.SUCCESS(f'Created JudicialCase for crime {crime.id} with judge {judge.username}'))
+
+        self.stdout.write(self.style.SUCCESS("JudicialCases created."))
 
     def create_investigations(self):
         investigators = CustomUser.objects.filter(role='investigator')
@@ -176,4 +232,4 @@ class Command(BaseCommand):
                 status=random.choice(['open', 'closed', 'pending']),
                 evidence_files=None,
             )
-        self.stdout.write("Investigations created.")
+        self.stdout.write(self.style.SUCCESS("Investigations created."))

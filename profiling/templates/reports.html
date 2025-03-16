@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Crime Report</title>
+    <!-- Bootstrap 4 CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .report-title {
+            color: #343a40;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .section-title {
+            color: #495057;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        .table thead th {
+            background-color: #007bff;
+            color: white;
+        }
+        .table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .btn-download {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Report Title -->
+        <h1 class="report-title">Monthly Crime Report for {{ selected_month }}/{{ selected_year }}</h1>
+
+        <!-- Download PDF Button -->
+        <a href="?format=pdf&month={{ selected_month }}&year={{ selected_year }}" class="btn btn-primary btn-download">
+            Download PDF
+        </a>
+
+        <!-- General Statistics -->
+        <h2 class="section-title">General Statistics</h2>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Total Crimes</td>
+                    <td>{{ total_crimes }}</td>
+                </tr>
+                <tr>
+                    <td>Solved Cases</td>
+                    <td>{{ solved_cases }}</td>
+                </tr>
+                <tr>
+                    <td>Pending Cases</td>
+                    <td>{{ pending_cases }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Age Distribution -->
+        <h2 class="section-title">Age Distribution of Parties Involved</h2>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Age</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for age, count in age_distribution.items %}
+                <tr>
+                    <td>{{ age }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Most Committed Crimes -->
+        <h2 class="section-title">Most Committed Crimes</h2>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Crime Type</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for crime, count in most_committed_crimes %}
+                <tr>
+                    <td>{{ crime }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- High Crime Locations -->
+        <h2 class="section-title">Locations with High Crime Rates</h2>
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for location, count in high_crime_locations %}
+                <tr>
+                    <td>{{ location }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Bootstrap 4 JS and dependencies -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

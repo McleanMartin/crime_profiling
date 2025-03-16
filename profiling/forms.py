@@ -70,7 +70,7 @@ class CrimeForm(forms.ModelForm):
 
     class Meta:
         model = Crime
-        fields = ['crime_type', 'description', 'location', 'date_reported', 'status', 'tags']
+        fields = ['crime_type', 'description', 'location','documents','date_reported', 'status', 'tags']
         widgets = {
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -80,6 +80,10 @@ class CrimeForm(forms.ModelForm):
             'location': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter crime location',
+            }),
+            'documents': forms.FileInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Upload Document',
             }),
             'date_reported': forms.DateInput(attrs={
                 'type': 'date',
@@ -96,6 +100,10 @@ class PartyForm(forms.ModelForm):
         model = Party
         fields = ['role', 'name', 'contact_info', 'date_of_birth', 'address', 'relationship_to_case']
         widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
-            'role': forms.Select(attrs={'class': 'party-role-select'}),
+            'role': forms.Select(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter full name'}),
+            'contact_info': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter contact info'}),
+            'date_of_birth': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'address': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter address'}),
+            'relationship_to_case': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter relationship to case'}),
         }

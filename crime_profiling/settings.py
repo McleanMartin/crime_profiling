@@ -139,3 +139,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'profiling.CustomUser'
 
+AUTH_LOGIN_REDIRECT_URL = '/'
+AUTH_LOGOUT_REDIRECT_URL = '/'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mypolicetxt@gmail.com'
+EMAIL_HOST_PASSWORD = 'pa22w0rd'

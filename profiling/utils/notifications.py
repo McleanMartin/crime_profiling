@@ -26,7 +26,7 @@ def send_email_notification(notification):
     send_mail(
         subject,
         message,
-        'noreply@crimesystem.com',
+        'mypolicetxt@gmail.com',
         [notification.recipient.email],
         fail_silently=True,
     )
