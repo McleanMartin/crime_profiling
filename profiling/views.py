@@ -99,7 +99,7 @@ def crime_detail(request, pk):
     form = CrimeForm(instance=crime)
     investigations = Investigation.objects.filter(crime=crime)
     judicial_cases = JudicialCase.objects.filter(crime=crime)
-    parties = crime.parties.all()
+    parties = Party.objects.filter(crime=crime)
     
     if request.method == 'POST':
         party_form = PartyForm(request.POST)

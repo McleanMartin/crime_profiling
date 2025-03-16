@@ -33,6 +33,13 @@
     {% include "partials/main-menu.html" %}
     
     <main class="h-100" style="margin-bottom:40px;">
+        {% if messages %}
+          <div class="container">
+              {% for message in messages %}
+                  <div class="alert alert-info">{{ message }}</div>
+              {% endfor %}
+          </div>
+        {% endif %}
         {% block content%}{% endblock%}
     </main>
 

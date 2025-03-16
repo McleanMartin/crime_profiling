@@ -12,8 +12,8 @@ def role_required(allowed_roles):
             if request.user.is_authenticated and request.user.role in allowed_roles:
                 return view_func(request, *args, **kwargs)
             else:
-                messages.error(request, "You do not have permission to access this page.")
-                return redirect('index') 
+                messages.error(request, "Access Denied. You dont have permission to perform that action.")
+                return redirect('crime_list') 
         return wrapper
     return decorator
 
