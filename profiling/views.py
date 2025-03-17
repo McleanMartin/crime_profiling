@@ -189,13 +189,15 @@ def dashboard(request):
     }
 
     crimes_by_type_with_monthly_counts = []
-    for crime_type in Crime.objects.values_list('crime_type', flat=True).distinct():
+    crime_types = Crime.objects.values_list('crime_type', flat=True).distinct()
+
+    for crime_type in crime_types:
         monthly_counts = []
         for month in range(1, 13):
             count = Crime.objects.filter(
                 crime_type=crime_type,
                 date_reported__month=month
-            ).count()
+            ).aggregate(count=Count('id'))['count']
             monthly_counts.append(count)
         
         crimes_by_type_with_monthly_counts.append({
