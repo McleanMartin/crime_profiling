@@ -1,6 +1,9 @@
 {% extends "_layout.html" %}
 {% load json_date %}
+{% load role_filters %}  <!-- Load the custom template filter -->
+
 {% block title %}Case Details{% endblock title %}
+
 {% block content %}
 <div class="container">
     <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin-bottom:40px;">
@@ -8,12 +11,23 @@
             <div class="tab-hd">
                 <h2>{{ crime.case_number }} - {{ crime.crime_type }}</h2>
                 <p>{{ crime.description }}</p>
-                <button type="button" class="btn  btn-success" data-toggle="modal" data-target="#myModalthree">Edit Case</button>
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModaltwoy" data-case-pk="{{ case.pk }}">
-                    Set Next Hearing
-                </button>
-                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModalnine">Delete Case</button>
+
+                <!-- Hide buttons based on user role -->
+                {% if request.user|has_role:'judge' %}
+                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModalthree">Edit Case</button>
+                {% endif %}
+
+                {% if request.user|has_role:'judge' %}
+                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModaltwoy" data-case-pk="{{ case.pk }}">
+                        Set Next Hearing
+                    </button>
+                {% endif %}
+
+                {% if request.user|has_role:'judge' %}
+                    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModalnine">Delete Case</button>
+                {% endif %}
             </div>
+
             <div class="widget-tabs-list">
                 <ul class="nav nav-tabs">
                     <li class="active"><a data-toggle="tab" href="#case">Judges</a></li>
@@ -21,10 +35,12 @@
                     <li><a data-toggle="tab" href="#parties">Parties</a></li>
                     <li><a data-toggle="tab" href="#evidence">Evidence Files</a></li>
                 </ul>
+
                 <div class="tab-content tab-custom-st">
+                    <!-- Case Tab -->
                     <div id="case" class="tab-pane fade in active">
                         <div class="tab-ctn">
-                            <table class="table table-sc-ex ">
+                            <table class="table table-sc-ex">
                                 <thead>
                                     <tr>
                                         <th>Judge</th>
@@ -39,21 +55,27 @@
                                     {% for case in judicial_cases %}
                                         <tr>
                                             <td>{{ case.judge }}</td>
-                                            <td>{{case.hearing_date}}</td>
+                                            <td>{{ case.hearing_date }}</td>
                                             <td>{{ case.court_location }}</td>
                                             <td>{{ case.verdict|default:"Pending" }}</td>
-                                            <td>{{case.next_hearing_date}}</td>
-                                            <td><button type="button" class="btn  btn-success" data-toggle="modal" data-target="#myModaltwo">Update Verdict</button></td>
+                                            <td>{{ case.next_hearing_date }}</td>
+                                            <td>
+                                                {% if request.user|has_role:'judge' %}
+                                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModaltwo">Update Verdict</button>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                     {% empty %}
                                         <tr>
-                                            <td colspan="4" class="text-center">No cases found.</td>
+                                            <td colspan="6" class="text-center">No cases found.</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
+                    <!-- Investigation Tab -->
                     <div id="investigation" class="tab-pane fade">
                         <div class="tab-ctn">
                             <div class="bsc-tbl">
@@ -67,23 +89,29 @@
                                     <tbody>
                                         {% for investigation in investigations %}
                                         <tr>
-                                            <td>{{ investigation.investigator}} </td>
+                                            <td>{{ investigation.investigator }}</td>
                                             <td>{{ investigation.status }}</td>
                                         </tr>
                                         {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-center">No investigations found.</td>
+                                        </tr>
                                         {% endfor %}
-    
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Parties Tab -->
                     <div id="parties" class="tab-pane fade">
                         <div class="tab-ctn">
                             <div class="table-responsive">
-                                <button type="button" class="btn  btn-xs btn-success" data-toggle="modal" data-target="#Mymodal"">
-                                    Add Party
-                                </button>
+                                {% if request.user|has_role:'judge' or request.user|has_role:'investigator' %}
+                                    <button type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#Mymodal">
+                                        Add Party
+                                    </button>
+                                {% endif %}
                                 <table class="table table-striped">
                                     <thead>
                                         <tr>
@@ -100,8 +128,10 @@
                                                 <td>{{ party.role }}</td>
                                                 <td>{{ party.contact_info }}</td>
                                                 <td>
-                                                    <a href="{% url 'edit_party' party.pk %}" class="btn btn-sm btn-primary">Edit</a>
-                                                    <a href="{% url 'delete_party' party.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                                    {% if request.user|has_role:'judge' or request.user|has_role:'investigator' %}
+                                                        <a href="{% url 'edit_party' party.pk %}" class="btn btn-sm btn-primary">Edit</a>
+                                                        <a href="{% url 'delete_party' party.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                         {% empty %}
@@ -114,13 +144,86 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Evidence Tab -->
+                    <div id="evidence" class="tab-pane fade">
+                        <div class="tab-ctn">
+                            <div class="table-responsive">
+                                {% if request.user|has_role:'police officer' or request.user|has_role:'investigator' %}
+                                    <button type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#evidenceModal">
+                                        Upload Evidence
+                                    </button>
+                                {% endif %}
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">File Name</th>
+                                            <th scope="col">Uploaded By</th>
+                                            <th scope="col">Uploaded On</th>
+                                            <th scope="col">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for evidence in evidence_files %}
+                                            <tr>
+                                                <td>{{ evidence.file.name }}</td>
+                                                <td>{{ evidence.uploaded_by }}</td>
+                                                <td>{{ evidence.uploaded_on|date:"Y-m-d H:i" }}</td>
+                                                <td>
+                                                    <a href="{{ evidence.file.url }}" class="btn btn-sm btn-primary" target="_blank">View</a>
+                                                    {% if request.user|has_role:'police officer' or request.user|has_role:'investigator' %}
+                                                        <a href="{% url 'delete_evidence' evidence.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center">No evidence files found.</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 </div>
 
-{% comment %} Edit Case {% endcomment %}
+<!-- Evidence Upload Modal -->
+<div class="modal fade" id="evidenceModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Upload Evidence</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'upload_evidence' crime.pk %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="evidenceFile">Choose File</label>
+                        <input type="file" class="form-control" id="evidenceFile" name="evidence_file" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter a brief description"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Case Modal -->
 <div class="modal fade" id="myModalthree" role="dialog">
-    <div class="modal-dialog modal-large">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Edit Crime Case</h4>
@@ -145,7 +248,7 @@
     </div>
 </div>
 
-{% comment %} Delete Case {% endcomment %}
+<!-- Delete Case Modal -->
 <div class="modal fade" id="myModalnine" role="dialog">
     <div class="modal-dialog modals-default nk-red">
         <div class="modal-content">
@@ -161,14 +264,14 @@
                 <form id="deleteForm" method="post" action="">
                     {% csrf_token %}
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <a href="{% url "delete_crime" crime.pk %}" class="btn btn-danger">Delete</a>
+                    <a href="{% url 'delete_crime' crime.pk %}" class="btn btn-danger">Delete</a>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{% comment %} Update Verdict {% endcomment %}
+<!-- Update Verdict Modal -->
 <div class="modal fade" id="myModaltwo" role="dialog">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -177,7 +280,7 @@
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="updateVerdictForm" method="post" action="{% url "update_case_status" crime.pk%}">
+                <form id="updateVerdictForm" method="post" action="{% url 'update_case_status' crime.pk %}">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="verdict">Verdict</label>
@@ -200,7 +303,8 @@
         </div>
     </div>
 </div>
-{% comment %} Set Next Hearing Date {% endcomment %}
+
+<!-- Set Next Hearing Date Modal -->
 <div class="modal fade" id="myModaltwoy" role="dialog">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -209,8 +313,7 @@
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- Form action will be dynamically set using JavaScript -->
-                <form id="setHearingDateForm" method="post" action="{% url "schedule_next_hearing" crime.pk %}">
+                <form id="setHearingDateForm" method="post" action="{% url 'schedule_next_hearing' crime.pk %}">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="next_hearing_date">Select Date</label>
@@ -226,8 +329,9 @@
     </div>
 </div>
 
+<!-- Add Party Modal -->
 <div class="modal fade" id="Mymodal" role="dialog">
-    <div class="modal-dialog modal-large">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Add Case Party</h4>
@@ -251,5 +355,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

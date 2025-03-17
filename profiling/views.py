@@ -13,6 +13,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from io import BytesIO
+from collections import Counter
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.shortcuts import render
@@ -23,53 +24,42 @@ from django.db.models import Q, Count
 from django.db.models.functions import ExtractMonth
 
 
-
-
 def monthly_report(request):
-    # Get the selected month and year from the request (default to current month)
     selected_month = int(request.GET.get('month', timezone.now().month))
     selected_year = int(request.GET.get('year', timezone.now().year))
 
-    # Filter crimes for the selected month and year
     crimes = Crime.objects.filter(
         date_reported__month=selected_month,
         date_reported__year=selected_year
     )
 
-    # Total crimes
     total_crimes = crimes.count()
 
-    # Solved and pending cases
     solved_cases = JudicialCase.objects.filter(
         crime__in=crimes,
         verdict='guilty'
     ).count()
+
     pending_cases = JudicialCase.objects.filter(
         crime__in=crimes,
         verdict='pending'
     ).count()
 
-    # Age distribution of parties involved
     parties = Party.objects.filter(crime__in=crimes)
     age_distribution = Counter()
     for party in parties:
         age = (timezone.now().date() - party.date_of_birth).days // 365
         age_distribution[age] += 1
 
-    # Most committed crimes
     most_committed_crimes = Counter(crime.crime_type for crime in crimes).most_common(5)
-
-    # Locations with the highest crime rates
     high_crime_locations = Counter(crime.location for crime in crimes).most_common(5)
 
-    # Check if the user requested a PDF
     if request.GET.get('format') == 'pdf':
         return generate_pdf(
             selected_month, selected_year, total_crimes, solved_cases, pending_cases,
             age_distribution, most_committed_crimes, high_crime_locations
         )
 
-    # Prepare context for the template
     context = {
         'selected_month': selected_month,
         'selected_year': selected_year,
@@ -81,7 +71,7 @@ def monthly_report(request):
         'high_crime_locations': high_crime_locations,
     }
 
-    return render(request, 'profiling/monthly_report.html', context)
+    return render(request, 'reports.html', context)
 
 def generate_pdf(month, year, total_crimes, solved_cases, pending_cases, age_distribution, most_committed_crimes, high_crime_locations):
     # Create a BytesIO buffer to store the PDF
@@ -343,16 +333,18 @@ def delete_crime(request, pk):
     return redirect(reverse('crime_list'))
 
 @investigator_required
-def upload_evidence(request, investigation_id):
-    investigation = get_object_or_404(Investigation, id=investigation_id)
+def upload_evidence(request,pk):
+    crime = get_object_or_404(Crime, pk=pk)
     if request.method == 'POST':
-        form = EvidenceUploadForm(request.POST, request.FILES, instance=investigation)
+        form = EvidenceUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect(reverse('investigation_detail', args=[investigation.id]))
+            obj = form.save(commit=False)
+            obj.crime = crime
+            obj.save()
+            return redirect(reverse('crime_detail', args=[pk]))
     else:
-        form = EvidenceUploadForm(instance=investigation)
-    return render(request, 'partials/evidence_upload_form.html', {'form': form})
+        form = EvidenceUploadForm()
+    return redirect(reverse('crime_detail', args=[pk]))
 
 @login_required
 def investigation_detail(request, pk):

@@ -1,19 +1,21 @@
-from django.db.models.signals import pre_save, post_save
-from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import transaction
 from django.utils import timezone
-from profiling.models import *
-from profiling.utils.notifications import *
+from django.core.exceptions import ObjectDoesNotExist
+from profiling.models import Crime, JudicialCase, Investigation, CustomUser
+from profiling.utils.notifications import create_notification
 import re
+import random
+
 
 @receiver(post_save, sender=Crime)
 def generate_case_number_signal(sender, instance, created, **kwargs):
     """
-    Generates and saves a case number after crime record creation
-    - Uses post_save to ensure we don't attempt this before the object exists
-    - Implements retry logic for potential collisions
-    - Updates the instance without infinite signal recursion
+    Generates and saves a case number after crime record creation.
+    - Uses post_save to ensure we don't attempt this before the object exists.
+    - Implements retry logic for potential collisions.
+    - Updates the instance without infinite signal recursion.
     """
     if created and not instance.case_number:
         max_retries = 3
@@ -54,22 +56,47 @@ def base36_encode(number):
 
 @receiver(post_save, sender=Crime)
 def create_initial_judicial_case(sender, instance, created, **kwargs):
+    """
+    Creates an initial judicial case and assigns a random judge and investigator
+    when a new crime is reported.
+    """
     if created:
         try:
-            judge = CustomUser.objects.filter(role='judge').first()
-            JudicialCase.objects.create(
-                crime=instance,
-                judge=judge,
-                date_heard=timezone.now().date(),
-                court_location='Central Courthouse',
-                status='pending'
-            )
+            # Randomly assign a judge to the judicial case
+            judges = CustomUser.objects.filter(role='judge')
+            if judges.exists():
+                judge = random.choice(judges)
+                JudicialCase.objects.create(
+                    crime=instance,
+                    judge=judge,
+                    date_heard=timezone.now().date(),
+                    court_location='Central Courthouse',
+                    status='pending'
+                )
+            else:
+                print("No judge found to assign to the judicial case.")
+
+            # Randomly assign an investigator to the investigation
+            investigators = CustomUser.objects.filter(role='investigator')
+            if investigators.exists():
+                investigator = random.choice(investigators)
+                Investigation.objects.create(
+                    crime=instance,
+                    investigator=investigator,
+                    status='pending'
+                )
+            else:
+                print("No investigator found to assign to the investigation.")
+
         except Exception as e:
-            print(f"Error creating judicial case: {str(e)}")
+            print(f"Error creating judicial case or investigation: {str(e)}")
 
 
 @receiver(post_save, sender=Crime)
 def notify_crime_creation(sender, instance, created, **kwargs):
+    """
+    Sends notifications to investigators when a new crime is created.
+    """
     if created:
         message = f"New crime reported: {instance.crime_type} (Case #{instance.case_number})"
         
@@ -84,8 +111,12 @@ def notify_crime_creation(sender, instance, created, **kwargs):
                 metadata={'priority': 'high'}
             )
 
+
 @receiver(post_save, sender=JudicialCase)
 def notify_hearing_scheduled(sender, instance, created, **kwargs):
+    """
+    Sends notifications to the assigned judge when a new hearing is scheduled.
+    """
     if created:
         message = f"New hearing scheduled for {instance.date_heard}"
         create_notification(
@@ -96,16 +127,22 @@ def notify_hearing_scheduled(sender, instance, created, **kwargs):
             metadata={'date': instance.date_heard.isoformat()}
         )
 
+
 @receiver(post_save, sender=Investigation)
 def notify_investigation_update(sender, instance, created, **kwargs):
+    """
+    Sends notifications to the investigator and related police officers when an investigation is created or updated.
+    """
     action = "created" if created else "updated"
     message = f"Investigation {action}: {instance.crime.crime_type}"
     
+    # Get recipients (investigator and police officers in the same department)
     recipients = [
         instance.investigator,
         *CustomUser.objects.filter(role='police', department=instance.investigator.department)
     ]
     
+    # Send notifications to each recipient
     for user in set(recipients):
         create_notification(
             user,

@@ -1,41 +1,70 @@
 {% load static %}
 <nav class="navbar navbar-default">
     <div class="container-fluid">
-      <!-- Brand and toggle get grouped for better mobile display -->
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="#">
-            <img src="{% static "images/logo.png" %}" width="40" height="40" class="d-inline-block align-top" alt="">
-            
-        </a>
-        <a class="navbar-brand" href="#">
-            Integrated Electronic Case Management System
-        </a>
-        
-      </div>
-  
-      <!-- Collect the nav links, forms, and other content for toggling -->
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="{% url "crime_list" %}">Cases</a></li>
-          <li><a href="{% url "court_roll" %}">Court Rolls</a></li>
-          <li><a href="{% url "trends" %}">Trends</a></li>
-          <li><a href="{% url "users" %}">Accounts</a></li>
-          <li><a href="#">Reports</a></li>
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{user.username|capfirst}}<span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="#">Profile</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a href="#">Logout</a></li>
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">
+                <img src="{% static 'images/logo.png' %}" width="50" height="50" class="d-inline-block align-top" alt="">
+            </a>
+            <a class="navbar-brand">
+                <strong>Integrated Electronic Case Management System</strong>
+            </a>
+        </div>
+
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="{% url 'crime_list' %}">Cases</a></li>
+                <li><a href="{% url 'court_roll' %}">Court Rolls</a></li>
+                <li><a href="{% url 'trends' %}">Trends</a></li>
+                <li><a href="{% url 'users' %}">Accounts</a></li>
+                <li><a href="{% url 'monthly_report' %}">Reports</a></li>
+
+                <!-- Notifications Dropdown -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="glyphicon glyphicon-bell"></span>
+                        {% if unread_count > 0 %}
+                        <span class="badge badge-danger">{{ unread_count }}</span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% if recent_notifications %}
+                        <li class="dropdown-header">Recent Notifications</li>
+                        {% for notification in recent_notifications %}
+                        <li>
+                            <a href="#">
+                                {{ notification.message }}
+                                <small class="text-muted">{{ notification.timestamp|timesince }} ago</small>
+                            </a>
+                        </li>
+                        {% endfor %}
+                        <li role="separator" class="divider"></li>
+                        <li><a href="#">View All Notifications</a></li>
+                        {% else %}
+                        <li><a href="#">No new notifications.</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+
+                <!-- User Dropdown -->
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        {{ user.username|capfirst }} <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#">Profile</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="{% url 'index' %}">Logout</a></li>
+                    </ul>
+                </li>
             </ul>
-          </li>
-        </ul>
-      </div><!-- /.navbar-collapse -->
+        </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
-  </nav>
+</nav>
