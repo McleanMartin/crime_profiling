@@ -1,0 +1,35 @@
+Username: hannah
+Email: clerk@example.com
+Password: pa22w0rd
+Role: clerk
+First Name: Hannah
+Last Name: Wilson
+----------------------------------------
+Username: brenda
+Email: prison_officer@example.com
+Password: pa22w0rd
+Role: prison officer
+First Name: Brenda
+Last Name: Rivera
+----------------------------------------
+Username: stephanie
+Email: investigator@example.com
+Password: pa22w0rd
+Role: investigator
+First Name: Stephanie
+Last Name: Henderson
+----------------------------------------
+Username: michelle
+Email: magistrate@example.com
+Password: pa22w0rd
+Role: magistrate
+First Name: Michelle
+Last Name: Alexander
+----------------------------------------
+Username: jennifer
+Email: police_officer@example.com
+Password: pa22w0rd
+Role: police officer
+First Name: Jennifer
+Last Name: Johnson
+----------------------------------------
