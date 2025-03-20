@@ -382,6 +382,8 @@ def investigation_detail(request, pk):
 @login_required
 def court_roll(request):
     cases = JudicialCase.objects.all().order_by('-date_heard')
+    for case in cases:
+        case.accused = case.crime.parties.filter(role='suspect').values_list('name', flat=True)
     return render(request, 'court_roll.html',{'cases': cases})
 
 # @judge_required

@@ -26,7 +26,7 @@
                                     <tr>
                                         <td><a href="{% url 'crime_detail' case.crime.pk %}">{{ case.crime.case_number }}</a></td>
                                         <td>{{ case.hearing_date }}</td>
-                                        <td></td>
+                                        <td>{{ case.accused }}</td>
                                         <td>{{ case.court_location }}</td>
                                         <td>{{ case.next_hearing_date }}</td>
                                     </tr>
