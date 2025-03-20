@@ -39,9 +39,10 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = (
+        ('clerk', 'clerk'),
         ('prison officer', 'Prison officer'),
         ('investigator', 'Investigator'),
-        ('judge', 'Judge'),
+        ('magistrate', 'Magistrate'),
         ('police officer', 'Police Officer'),
 
     )
@@ -59,19 +60,41 @@ class CustomUser(AbstractUser):
         ordering = ["email"]
 
     def __str__(self):
-        return self.first_name + ' ' + self.last_name
+        return self.get_full_name() or self.username
 
 
 class Crime(models.Model):
-    crime_type = models.CharField(max_length=100)
-    case_number = models.CharField(max_length=50)
+    # Define choices for crime_type
+    CRIME_TYPE_CHOICES = (
+        ('theft', 'Theft'),
+        ('assault', 'Assault'),
+        ('burglary', 'Burglary'),
+        ('fraud', 'Fraud'),
+        ('vandalism', 'Vandalism'),
+        ('drug_offense', 'Drug Offense'),
+        ('homicide', 'Homicide'),
+        ('cyber_crime', 'Cyber Crime'),
+        ('kidnapping', 'Kidnapping'),
+        ('rape', 'Rape'),
+        ('armed robbery', 'Armed Robbery'),
+        ('other', 'Other'),
+    )
+
+    crime_type = models.CharField(
+        max_length=100,
+        choices=CRIME_TYPE_CHOICES,
+        default='other', 
+    )
+    case_number = models.CharField(max_length=50, unique=True)
     description = models.TextField()
     location = models.TextField()
     date_reported = models.DateField()
     status = models.CharField(max_length=50)
-    documents = models.FileField(upload_to=None, max_length=100)
+    documents = models.FileField(upload_to='crime_documents/%Y/%m/%d/', blank=True, null=True)
     reported_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    tags = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.get_crime_type_display()} (Case #{self.case_number})"
 
 
 class JudicialCase(models.Model):
@@ -132,22 +155,15 @@ class Notification(models.Model):
         ('crime_created', 'New Crime Reported'),
         ('investigation_update', 'Investigation Update'),
         ('hearing_scheduled', 'Court Hearing Scheduled'),
-        ('evidence_added', 'Evidence Added'),
-        ('status_change', 'Case Status Changed'),
     )
-
     recipient = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    message = models.TextField()
     notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPES)
-    related_object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    read = models.BooleanField(default=False)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    message = models.TextField()
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
+    related_object_id = models.PositiveIntegerField(null=True, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
-
-    @property
-    def content_object(self):
-        return self.content_type.get_object_for_this_type(pk=self.related_object_id)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.get_notification_type_display()} - {self.recipient}"

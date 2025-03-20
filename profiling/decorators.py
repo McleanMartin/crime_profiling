@@ -23,10 +23,10 @@ def role_required(allowed_roles, redirect_url='crime_list', error_message="Acces
 
 # Specific decorators for each role
 def judge_required(view_func):
-    return role_required(['judge'], error_message="Only judges can perform this action.")(view_func)
+    return role_required(['magistrate'], error_message="Only magistrates can perform this action.")(view_func)
 
 def police_officer_required(view_func):
-    return role_required(['police officer'], error_message="Only police officers can perform this action.")(view_func)
+    return role_required(['police officer','magistrate'], error_message="Only police officers can perform this action.")(view_func)
 
 def investigator_required(view_func):
     return role_required(['investigator'], error_message="Only investigators can performthis action.")(view_func)

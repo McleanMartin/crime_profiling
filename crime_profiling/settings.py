@@ -151,3 +151,5 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'mypolicetxt@gmail.com'
 EMAIL_HOST_PASSWORD = 'pa22w0rd'
+
+DEFAULT_COURT_LOCATION = 'Central Court'

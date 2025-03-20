@@ -1,8 +1,0 @@
-{% load django_bootstrap5 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
-<form method="post" enctype="multipart/form-data" hx-post="{% url 'upload_evidence' investigation.id %}" hx-target="#evidence-list">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    <button type="submit">Upload</button>
-</form>

@@ -70,7 +70,7 @@ class CrimeForm(forms.ModelForm):
 
     class Meta:
         model = Crime
-        fields = ['crime_type', 'description', 'location','documents','date_reported', 'status', 'tags']
+        fields = ['crime_type', 'description', 'location','documents','date_reported', 'status']
         widgets = {
             'description': forms.Textarea(attrs={
                 'class': 'form-control',

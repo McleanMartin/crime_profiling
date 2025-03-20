@@ -1,0 +1,17 @@
+{% load static %}
+<!-- Header -->
+<header class="masthead mb-auto">
+    <div class="inner">
+        <h3 class="masthead-brand">
+            <img class="mr-3" src="{% static "images/logo.png" %}" alt="" width="100" height="50">
+            CMS
+        </h3>
+        <nav class="nav nav-masthead justify-content-center">
+            <a class="nav-link active" href="/">Home</a>
+            <a class="nav-link active" href="{% url "about" %}">About</a>
+            <a class="nav-link active" href="{% url "contact" %}">Contact</a>
+            {% comment %} <a class="nav-link active" href="#">Court Rolls</a> {% endcomment %}
+            <a class="nav-link active" href="{% url "index" %}">Login</a>
+        </nav>
+    </div>
+</header>

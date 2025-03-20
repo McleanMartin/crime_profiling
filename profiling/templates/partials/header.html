@@ -13,7 +13,7 @@
                 <img src="{% static 'images/logo.png' %}" width="50" height="50" class="d-inline-block align-top" alt="">
             </a>
             <a class="navbar-brand">
-                <strong>Integrated Electronic Case Management System</strong>
+                <strong>Case Management System</strong>
             </a>
         </div>
 
@@ -39,7 +39,7 @@
                         <li class="dropdown-header">Recent Notifications</li>
                         {% for notification in recent_notifications %}
                         <li>
-                            <a href="#">
+                            <a href="{{ notification.content_object.get_absolute_url }}">
                                 {{ notification.message }}
                                 <small class="text-muted">{{ notification.timestamp|timesince }} ago</small>
                             </a>

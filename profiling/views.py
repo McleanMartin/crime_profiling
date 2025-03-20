@@ -22,6 +22,7 @@ from datetime import datetime
 from django.urls import reverse
 from django.db.models import Q, Count
 from django.db.models.functions import ExtractMonth
+from profiling.utils.notifications import create_notification
 
 
 def monthly_report(request):
@@ -37,12 +38,14 @@ def monthly_report(request):
 
     solved_cases = JudicialCase.objects.filter(
         crime__in=crimes,
-        verdict='guilty'
+        verdict='closed'
     ).count()
+
 
     pending_cases = JudicialCase.objects.filter(
         crime__in=crimes,
-        verdict='pending'
+    ).filter(
+        Q(verdict='pending') | Q(verdict='in progress')
     ).count()
 
     parties = Party.objects.filter(crime__in=crimes)
@@ -72,6 +75,12 @@ def monthly_report(request):
     }
 
     return render(request, 'reports.html', context)
+
+def about_view(request):
+    return render(request,'about.html')
+
+def contact_view(request):
+    return render(request,'contact.html')
 
 def generate_pdf(month, year, total_crimes, solved_cases, pending_cases, age_distribution, most_committed_crimes, high_crime_locations):
     # Create a BytesIO buffer to store the PDF
@@ -251,9 +260,9 @@ def index_view(request):
 def crime_list(request):
     form = CrimeForm()
     query = request.GET.get('q')
-    crimes = Crime.objects.all()
+    crimes = Crime.objects.all().order_by('-case_number')
     if query:
-        crimes = crimes.filter(Q(crime_type__icontains=query) | Q(description__icontains=query))
+        crimes = crimes.filter(Q(crime_type__icontains=query) | Q(description__icontains=query)).order_by('-pk')
     return render(request, 'crime_list.html', {'crimes': crimes,'form':form})
 
 @login_required
@@ -269,11 +278,11 @@ def crime_detail(request, pk):
         if party_form.is_valid():
             party = party_form.save(commit=False)
             party.crime = crime
-            party.save()
+            party.save() 
+            messages.success(request,f'{party.name} was add as {party.role} for case number {crime.case_number}')
             return redirect('crime_detail', pk=crime.pk)
     else:
         party_form = PartyForm()
-
     return render(request, 'crime_detail.html', {
         'crime': crime,
         'investigations': investigations,
@@ -283,67 +292,84 @@ def crime_detail(request, pk):
         'form':form,
     })
 
-@police_officer_required
+# @police_officer_required
 def edit_party_view(request, pk):
     party = get_object_or_404(Party, pk=pk)
     if request.method == 'POST':
         form = PartyForm(request.POST, instance=party)
         if form.is_valid():
             form.save()
+            messages.success(request, f'{party.name} details successfully updated.')
             return redirect('crime_detail', pk=party.crime.pk)
+        else:
+            messages.error(request, 'There was an error updating the party details. Please check the form.')
     else:
         form = PartyForm(instance=party)
     return redirect('crime_detail', pk=party.crime.pk)
 
-@police_officer_required
+
+# @police_officer_required
 def delete_party_view(request, pk):
     party = get_object_or_404(Party, pk=pk)
-    crime_pk = party.crime.pk 
+    crime_pk = party.crime.pk
+    name = party.name
     party.delete()
-    return redirect('crime_detail', pk=crime_pk) 
+    messages.success(request, f'{name} was successfully deleted.')
+    return redirect('crime_detail', pk=crime_pk)
 
-@police_officer_required
+# @police_officer_required
 def create_crime(request):
     if request.method == 'POST':
         form = CrimeForm(request.POST, request.FILES)
         if form.is_valid():
             crime = form.save(commit=False)
             crime.date_reported = timezone.now().date()
-            crime.hearing_date = timezone.now().date()
             crime.reported_by = request.user
             crime.save()
+            messages.success(request, f'Case number {crime.case_number} created successfully.')
             return redirect(reverse('crime_list'))
+        else:
+            messages.error(request, 'There was an error creating the crime. Please check the form.')
     return redirect(reverse('crime_list'))
 
-@police_officer_required
+# @police_officer_required
 def update_crime(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     if request.method == 'POST':
         form = CrimeForm(request.POST, request.FILES, instance=crime)
         if form.is_valid():
             form.save()
-            return redirect(reverse('crime_list')) 
+            messages.success(request, f'Case {crime.case_number} updated successfully.')
+            return redirect(reverse('crime_list'))
+        else:
+            messages.error(request, 'There was an error updating the crime. Please check the form.')
     else:
-        form = CrimeForm(instance=crime) 
+        form = CrimeForm(instance=crime)
     return redirect(reverse('crime_list'))
 
-@police_officer_required
+# @police_officer_required
 def delete_crime(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     rolls = JudicialCase.objects.filter(crime=crime).delete()
     crime.delete()
+    messages.success(request, f'Case {crime.case_number} deleted.')
     return redirect(reverse('crime_list'))
 
-@investigator_required
-def upload_evidence(request,pk):
+
+# @investigator_required
+def upload_evidence(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     if request.method == 'POST':
         form = EvidenceUploadForm(request.POST, request.FILES)
         if form.is_valid():
             obj = form.save(commit=False)
             obj.crime = crime
+            obj.investigator = request.user
             obj.save()
+            messages.success(request, f'Evidence for case #{crime.case_number} updated.')
             return redirect(reverse('crime_detail', args=[pk]))
+        else:
+            messages.error(request, 'There was an error uploading the evidence. Please check the form.')
     else:
         form = EvidenceUploadForm()
     return redirect(reverse('crime_detail', args=[pk]))
@@ -358,7 +384,7 @@ def court_roll(request):
     cases = JudicialCase.objects.all().order_by('-date_heard')
     return render(request, 'court_roll.html',{'cases': cases})
 
-@judge_required
+# @judge_required
 def update_case_status(request, pk):
     crime = get_object_or_404(Crime, pk=pk)
     case = JudicialCase.objects.get(crime=crime)
@@ -366,6 +392,7 @@ def update_case_status(request, pk):
         verdict = request.POST.get('verdict')
         case.verdict = verdict
         case.save()
+        messages.success(request, f'Case status updated to {verdict}.')
         return redirect(reverse('crime_detail', args=[case.pk]))
     else:
         form = JudicialCaseStatusForm(instance=case)
@@ -377,9 +404,9 @@ def schedule_next_hearing(request, pk):
     if request.method == 'POST':
         next_hearing_date = request.POST.get('next_hearing_date')
         case.next_hearing_date = next_hearing_date
-        print(case.next_hearing_date)
-        case.save() 
-        return redirect(reverse('crime_detail', args=[case.pk])) 
+        case.save()
+        messages.success(request, f'Next hearing scheduled for {next_hearing_date}.')
+        return redirect(reverse('crime_detail', args=[case.pk]))
     return redirect(reverse('crime_detail', args=[case.pk]))
 
 @login_required
@@ -394,11 +421,17 @@ def notifications_view(request):
 @login_required
 def mark_notification_read(request, pk):
     if request.method == 'POST':
-        notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
-        notification.read = True
-        notification.save()
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'error'}, status=400)
+        try:
+            notification = Notification.objects.get(pk=pk, recipient=request.user)
+            notification.read = True
+            notification.save()
+            return JsonResponse({'status': 'success'})
+        except Notification.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Notification not found.'}, status=404)
+        except Exception as e:
+            logger.error(f"Error marking notification as read: {e}")
+            return JsonResponse({'status': 'error', 'message': 'An error occurred.'}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
 @login_required
 def custom_user_list_view(request):
@@ -416,6 +449,7 @@ def custom_user_create_view(request):
     else:
         form = CustomUserCreationForm() 
     return redirect(reverse_lazy('users'))
+
 
 @login_required
 def Logout_view(request):

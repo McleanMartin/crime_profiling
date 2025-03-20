@@ -15,8 +15,8 @@
                             <thead>
                                 <tr>
                                     <th scope="col">Case_Number</th>
-                                    <th scope="col">First Hearing Date</th>
-                                    <th scope="col">Judge</th>
+                                    <th scope="col">Hearing Date</th>
+                                    <th scope="col">Accused</th>
                                     <th scope="col">Court_Location</th>
                                     <th scope="col">Next Hearing Date</th>
                                 </tr>
@@ -26,7 +26,7 @@
                                     <tr>
                                         <td><a href="{% url 'crime_detail' case.crime.pk %}">{{ case.crime.case_number }}</a></td>
                                         <td>{{ case.hearing_date }}</td>
-                                        <td>{{ case.judge.email }}</td>
+                                        <td></td>
                                         <td>{{ case.court_location }}</td>
                                         <td>{{ case.next_hearing_date }}</td>
                                     </tr>

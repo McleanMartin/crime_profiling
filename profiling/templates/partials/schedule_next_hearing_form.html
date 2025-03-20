@@ -1,8 +1,0 @@
-{% load django_bootstrap5 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
-<form method="post" hx-post="{% url 'schedule_next_hearing' case.id %}" hx-target="#next-hearing-date">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    <button type="submit">Schedule Hearing</button>
-</form>

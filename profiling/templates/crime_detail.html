@@ -1,6 +1,6 @@
 {% extends "_layout.html" %}
 {% load json_date %}
-{% load role_filters %}  <!-- Load the custom template filter -->
+{% load role_filters %}
 
 {% block title %}Case Details{% endblock title %}
 
@@ -13,24 +13,24 @@
                 <p>{{ crime.description }}</p>
 
                 <!-- Hide buttons based on user role -->
-                {% if request.user|has_role:'judge' %}
+                {% if request.user|has_role:'magistrate' %}
                     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModalthree">Edit Case</button>
                 {% endif %}
 
-                {% if request.user|has_role:'judge' %}
+                {% if request.user|has_role:'magistrate' %}
                     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModaltwoy" data-case-pk="{{ case.pk }}">
                         Set Next Hearing
                     </button>
                 {% endif %}
 
-                {% if request.user|has_role:'judge' %}
+                {% if request.user|has_role:'magistrate' %}
                     <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#myModalnine">Delete Case</button>
                 {% endif %}
             </div>
 
             <div class="widget-tabs-list">
                 <ul class="nav nav-tabs">
-                    <li class="active"><a data-toggle="tab" href="#case">Judges</a></li>
+                    <li class="active"><a data-toggle="tab" href="#case">Magistrates</a></li>
                     <li><a data-toggle="tab" href="#investigation">Investigators</a></li>
                     <li><a data-toggle="tab" href="#parties">Parties</a></li>
                     <li><a data-toggle="tab" href="#evidence">Evidence Files</a></li>
@@ -43,7 +43,7 @@
                             <table class="table table-sc-ex">
                                 <thead>
                                     <tr>
-                                        <th>Judge</th>
+                                        <th>Magistrate</th>
                                         <th>Hearing Dates</th>
                                         <th>Court Location</th>
                                         <th>Verdict</th>
@@ -60,8 +60,9 @@
                                             <td>{{ case.verdict|default:"Pending" }}</td>
                                             <td>{{ case.next_hearing_date }}</td>
                                             <td>
-                                                {% if request.user|has_role:'judge' %}
+                                                {% if request.user|has_role:'magistrate' %}
                                                     <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModaltwo">Update Verdict</button>
+                                                    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModaltwo">Delegate Case</button>
                                                 {% endif %}
                                             </td>
                                         </tr>
@@ -107,7 +108,7 @@
                     <div id="parties" class="tab-pane fade">
                         <div class="tab-ctn">
                             <div class="table-responsive">
-                                {% if request.user|has_role:'judge' or request.user|has_role:'investigator' %}
+                                {% if request.user|has_role:'police officer'%}
                                     <button type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#Mymodal">
                                         Add Party
                                     </button>
@@ -128,7 +129,7 @@
                                                 <td>{{ party.role }}</td>
                                                 <td>{{ party.contact_info }}</td>
                                                 <td>
-                                                    {% if request.user|has_role:'judge' or request.user|has_role:'investigator' %}
+                                                    {% if request.user|has_role:'magistrate' or request.user|has_role:'investigator' %}
                                                         <a href="{% url 'edit_party' party.pk %}" class="btn btn-sm btn-primary">Edit</a>
                                                         <a href="{% url 'delete_party' party.pk %}" class="btn btn-sm btn-danger">Delete</a>
                                                     {% endif %}
